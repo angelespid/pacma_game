@@ -5,7 +5,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include "laberinto.h"
-
+#include "enemigo.h"
 class MainWindow : public QMainWindow {
     Q_OBJECT
 

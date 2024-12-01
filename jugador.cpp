@@ -1,11 +1,32 @@
 #include "jugador.h"
 #include <QDebug>
 #include <QPainter>
+#include "enemigo.h"
+#include <QTimer>
 
 void Jugador::actualizarPosicion() {
     setPos(columna * cellSize, fila * cellSize);
-    qDebug() << "Jugador movido a posición lógica:" << fila << columna
-             << "y posición gráfica:" << pos();}
+    qDebug() << "Jugador movido a posición gráfica:" << pos();
+
+    // Si el jugador es invulnerable, no procesar colisiones
+    if (invulnerable) {
+        qDebug() << "Jugador es invulnerable. Ignorando colisiones.";
+        return;
+    }
+
+    // Comprobar colisiones con enemigos
+    QList<QGraphicsItem *> itemsColisionados = collidingItems();
+    for (QGraphicsItem *item : itemsColisionados) {
+        Enemigo *enemigo = dynamic_cast<Enemigo *>(item);
+        if (enemigo) {
+            qDebug() << "¡Colisión con un enemigo!";
+            emit colisionConEnemigo();
+            activarInvulnerabilidad(); // Activar invulnerabilidad tras la colisión
+            return;
+        }
+    }
+}
+
 
 
 Jugador::Jugador(const QVector<QVector<int>> &mapa, int cellSize, QGraphicsItem *parent)
@@ -57,4 +78,27 @@ void Jugador::keyPressEvent(QKeyEvent *event) {
     } else {
         qDebug() << "Movimiento fuera de los límites.";
     }
+}
+
+void Jugador::reiniciarPosicion() {
+    fila = 1;       // Cambia a la posición inicial lógica
+    columna = 1;    // Cambia a la posición inicial lógica
+    actualizarPosicion(); // Mueve gráficamente al jugador
+    qDebug() << "Jugador reiniciado a la posición inicial.";
+}
+
+void Jugador::activarInvulnerabilidad() {
+    invulnerable = true; // Activar invulnerabilidad
+    qDebug() << "Jugador es invulnerable temporalmente.";
+
+    // Crear y configurar el temporizador
+    if (!timerInvulnerabilidad) {
+        timerInvulnerabilidad = new QTimer(this);
+        connect(timerInvulnerabilidad, &QTimer::timeout, [=]() {
+            invulnerable = false; // Desactivar invulnerabilidad
+            timerInvulnerabilidad->stop(); // Detener el temporizador
+            qDebug() << "Jugador ya no es invulnerable.";
+        });
+    }
+    timerInvulnerabilidad->start(1000); // 1 segundo de invulnerabilidad
 }
