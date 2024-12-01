@@ -1,0 +1,19 @@
+# ninja log v6
+147	4220	7546398297700000	build.ninja	fb6b94e86713b0dc
+5257	34170	7547016977660000	CMakeFiles/Pacman_game.dir/bloque.cpp.obj	25e602fc9a20ab1c
+5197	39842	7547016977050000	CMakeFiles/Pacman_game.dir/main.cpp.obj	65d06218de906090
+337	1415	7547044593480000	Pacman_game_autogen/timestamp	3a89d56455e1ded4
+2869	15045	7547034221440000	CMakeFiles/Pacman_game.dir/Pacman_game_autogen/mocs_compilation.cpp.obj	77048d54429c1216
+337	1415	7547044593480000	Pacman_game_autogen/mocs_compilation.cpp	3a89d56455e1ded4
+13201	16412	7547043893150000	Pacman_game.exe	e2d69c00fe2a5d74
+1433	13198	7547043775510000	CMakeFiles/Pacman_game.dir/mainwindow.cpp.obj	befe62add93d9ce0
+337	1415	7547044593480000	G:/Mi unidad/UdeA/2024-2/Informatica/Talleres/Pacman_game/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/Pacman_game_autogen/mocs_compilation.cpp	3a89d56455e1ded4
+337	1415	7547044593480000	G:/Mi unidad/UdeA/2024-2/Informatica/Talleres/Pacman_game/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/Pacman_game_autogen/timestamp	3a89d56455e1ded4
+5300	34330	7547016978090000	CMakeFiles/Pacman_game.dir/laberinto.cpp.obj	358e87e092bd2c36
+1333	14626	7547043188030000	CMakeFiles/Pacman_game.dir/jugador.cpp.obj	e05b277df452a48b
+433	1429	7547044928250000	Pacman_game_autogen/timestamp	3a89d56455e1ded4
+433	1429	7547044928250000	Pacman_game_autogen/mocs_compilation.cpp	3a89d56455e1ded4
+433	1429	7547044928250000	G:/Mi unidad/UdeA/2024-2/Informatica/Talleres/Pacman_game/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/Pacman_game_autogen/timestamp	3a89d56455e1ded4
+433	1429	7547044928250000	G:/Mi unidad/UdeA/2024-2/Informatica/Talleres/Pacman_game/build/Desktop_Qt_6_8_0_MinGW_64_bit-Debug/Pacman_game_autogen/mocs_compilation.cpp	3a89d56455e1ded4
+1461	13184	7547044938620000	CMakeFiles/Pacman_game.dir/mainwindow.cpp.obj	befe62add93d9ce0
+13188	16188	7547045055830000	Pacman_game.exe	e2d69c00fe2a5d74
