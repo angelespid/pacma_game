@@ -3,6 +3,35 @@
 #include <QPainter>
 #include "enemigo.h"
 #include <QTimer>
+#include "punto.h"
+#include <QGraphicsScene>
+#include <QGraphicsRectItem>
+
+
+Jugador::Jugador(const QVector<QVector<int>> &mapa, int cellSize, QGraphicsItem *parent)
+    : QObject(), QGraphicsEllipseItem(parent), mapa(mapa), cellSize(cellSize), velocidad(5) {
+    setRect(0, 0, cellSize, cellSize);
+    setBrush(Qt::yellow);
+
+    // Configurar al jugador como enfocable
+    setFlag(QGraphicsItem::ItemIsFocusable);
+    setFocus();
+
+    // Posición inicial lógica
+    fila = 1;
+    columna = 1;
+    actualizarPosicion();
+
+    // Inicializar teclas como no presionadas
+    for (int i = 0; i < 4; ++i) {
+        teclas[i] = false;
+    }
+
+    // Configurar temporizador para el movimiento continuo
+    QTimer *timerMovimiento = new QTimer(this);
+    connect(timerMovimiento, &QTimer::timeout, this, &Jugador::mover);
+    timerMovimiento->start(50); // Ajustar velocidad de actualización
+}
 
 void Jugador::actualizarPosicion() {
     setPos(columna * cellSize, fila * cellSize);
@@ -25,25 +54,6 @@ void Jugador::actualizarPosicion() {
             return;
         }
     }
-}
-
-
-
-Jugador::Jugador(const QVector<QVector<int>> &mapa, int cellSize, QGraphicsItem *parent)
-    : QObject(), QGraphicsEllipseItem(parent), mapa(mapa), cellSize(cellSize) {
-    // Definir tamaño del jugador como una celda
-    setRect(0, 0, cellSize, cellSize);
-
-    // Crear un pincel amarillo para el jugador
-    setBrush(QBrush(QColor(Qt::yellow)));
-    // Configurar al jugador como enfocable
-    setFlag(QGraphicsItem::ItemIsFocusable);
-    setFocus();
-
-    // Posición inicial en el mapa lógico (debe coincidir con una celda libre)
-    fila = 1;
-    columna = 1;
-    actualizarPosicion();
 }
 
 
@@ -101,4 +111,47 @@ void Jugador::activarInvulnerabilidad() {
         });
     }
     timerInvulnerabilidad->start(1000); // 1 segundo de invulnerabilidad
+}
+
+void Jugador::mover() {
+    QPointF movimiento(0, 0);
+
+    if (teclas[0]) movimiento.setY(-cellSize); // Arriba (W)
+    if (teclas[1]) movimiento.setX(-cellSize); // Izquierda (A)
+    if (teclas[2]) movimiento.setY(cellSize);  // Abajo (S)
+    if (teclas[3]) movimiento.setX(cellSize);  // Derecha (D)
+
+    // Validar si el movimiento es posible
+    if (!puedeMoverse(QPointF(movimiento.x(), 0))) movimiento.setX(0);
+    if (!puedeMoverse(QPointF(0, movimiento.y()))) movimiento.setY(0);
+
+    // Actualizar posición lógica y gráfica
+    if (movimiento != QPointF(0, 0)) {
+        setPos(pos() + movimiento);
+        columna += movimiento.x() / cellSize;
+        fila += movimiento.y() / cellSize;
+        actualizarPosicion();
+    }
+
+    // Verificar colisiones con puntos
+    QList<QGraphicsItem *> colisiones = collidingItems();
+    for (QGraphicsItem *item : colisiones) {
+        Punto *punto = dynamic_cast<Punto *>(item);
+        if (punto) {
+            emit puntoRecolectado();
+            scene()->removeItem(punto);
+            delete punto;
+        }
+    }
+}
+
+bool Jugador::puedeMoverse(const QPointF &delta) {
+    QPointF nuevaPos = pos() + delta;
+    QRectF nuevaRect(nuevaPos, rect().size());
+
+    for (QGraphicsItem *item : scene()->items(nuevaRect)) {
+        if (item == this) continue;
+        if (dynamic_cast<QGraphicsRectItem *>(item)) return false;
+    }
+    return true;
 }

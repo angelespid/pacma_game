@@ -4,6 +4,7 @@
 Laberinto::Laberinto(QGraphicsScene *scene, int cellSize) : scene(scene), cellSize(cellSize) {}
 
 void Laberinto::dibujarLaberinto(const QVector<QVector<int>> &mapa) {
+    this->mapa = mapa;
     for (int fila = 0; fila < mapa.size(); ++fila) {
         for (int columna = 0; columna < mapa[fila].size(); ++columna) {
             int tipo = mapa[fila][columna];
@@ -18,4 +19,7 @@ void Laberinto::dibujarLaberinto(const QVector<QVector<int>> &mapa) {
             scene->addItem(bloque); // Añadir bloque a la escena
         }
     }
+}
+const QVector<QVector<int>>& Laberinto::getMapa() const {
+    return mapa; // Devolver el mapa almacenado
 }
