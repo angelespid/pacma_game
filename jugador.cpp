@@ -49,13 +49,21 @@ void Jugador::actualizarPosicion() {
         Enemigo *enemigo = dynamic_cast<Enemigo *>(item);
         if (enemigo) {
             qDebug() << "¡Colisión con un enemigo!";
-            emit colisionConEnemigo();
-            activarInvulnerabilidad(); // Activar invulnerabilidad tras la colisión
+            vidas--;
+
+            emit vidasActualizadas(vidas); // Emitir señal para actualizar las vidas en la interfaz
+
+            if (vidas <= 0) {
+                qDebug() << "¡Game Over!";
+                emit gameOver();
+            } else {
+                reiniciarPosicion();
+                activarInvulnerabilidad(); // Evitar colisiones consecutivas
+            }
             return;
         }
     }
 }
-
 
 void Jugador::keyPressEvent(QKeyEvent *event) {
     qDebug() << "Tecla presionada:" << event->key();
@@ -154,4 +162,8 @@ bool Jugador::puedeMoverse(const QPointF &delta) {
         if (dynamic_cast<QGraphicsRectItem *>(item)) return false;
     }
     return true;
+}
+void Jugador::inicializarVidas(int numVidas) {
+    vidas = numVidas;
+    qDebug() << "Vidas inicializadas a:" << vidas;
 }

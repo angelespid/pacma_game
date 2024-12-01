@@ -7,6 +7,7 @@
 #include "laberinto.h"
 #include "enemigo.h"
 #include "punto.h"
+#include "jugador.h"
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -21,6 +22,8 @@ private:
     QGraphicsView *view;
     Laberinto *laberinto;
     int puntaje;
+    QGraphicsTextItem *textoVidas; // Texto para mostrar las vidas restantes
+    Jugador *jugador; // Variable miembro para el jugador
 };
 
 #endif // MAINWINDOW_H

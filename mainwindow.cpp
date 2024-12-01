@@ -40,10 +40,17 @@ MainWindow::MainWindow(QWidget *parent)
     textoPuntaje->setFont(QFont("Arial", 16));
     textoPuntaje->setZValue(1);
     scene->addItem(textoPuntaje);
+    // Mostrar el número de vidas
+    textoVidas = new QGraphicsTextItem(QString("Vidas: %1").arg(3));
+    textoVidas->setDefaultTextColor(Qt::white);
+    textoVidas->setFont(QFont("Arial", 16));
+    textoVidas->setPos(0, 20); // Posición debajo del puntaje
+    scene->addItem(textoVidas);
 
     // Crear el jugador
-    Jugador *jugador = new Jugador(mapa, 80);
+    jugador = new Jugador(mapa, 80);
     scene->addItem(jugador);
+    jugador->inicializarVidas(3); // Inicializar las vidas del jugador
 
     // Crear y añadir enemigos
     QVector<Enemigo *> enemigos;
@@ -80,6 +87,24 @@ MainWindow::MainWindow(QWidget *parent)
         textoPuntaje->setPlainText(QString("Puntaje: %1").arg(puntaje));
         qDebug() << "Puntaje actualizado:" << puntaje;
     });
+    connect(jugador, &Jugador::vidasActualizadas, [this](int vidas) {
+        textoVidas->setPlainText(QString("Vidas: %1").arg(vidas));
+        qDebug() << "Vidas actualizadas:" << vidas;
+    });
+    connect(jugador, &Jugador::gameOver, [this]() {
+        qDebug() << "¡Game Over!";
+        textoVidas->setPlainText("Vidas: 0");
+
+        QGraphicsTextItem *gameOverText = new QGraphicsTextItem("GAME OVER");
+        gameOverText->setDefaultTextColor(Qt::red);
+        gameOverText->setFont(QFont("Arial", 36));
+        gameOverText->setPos(scene->width() / 2 - 100, scene->height() / 2 - 50);
+        scene->addItem(gameOverText);
+
+        // Deshabilitar eventos de teclado
+        view->setEnabled(false);
+    });
+
 
     // Configurar foco
     view->setFocus();
@@ -103,4 +128,5 @@ void MainWindow::colocarPuntos() {
 MainWindow::~MainWindow() {
     delete laberinto;
     delete scene;
+    delete jugador; // Libera la memoria del jugador
 }

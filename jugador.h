@@ -19,11 +19,13 @@ public:
      void reiniciarPosicion();
      // Actualizar posición gráfica según posición lógica
     void activarInvulnerabilidad(); // Activar estado invulnerable
+     void inicializarVidas(int numVidas);
 private:
     QVector<QVector<int>> mapa; // Mapa lógico del laberinto (0: camino, 1: pared)
     int cellSize;               // Tamaño de cada celda en píxeles
     int fila;                   // Posición lógica (fila) del jugador
-    int columna;                // Posición lógica (columna) del jugador
+    int columna; // Posición lógica (columna) del jugador
+    int vidas;
     void actualizarPosicion();
     bool puedeMoverse(const QPointF &delta);
     bool teclas[4];
@@ -34,6 +36,8 @@ private:
 signals:
     void colisionConEnemigo();
     void puntoRecolectado();
+    void gameOver(); // Señal para indicar que el juego terminó
+    void vidasActualizadas(int vidas); // Señal para notificar cambios en las vidas
 };
 
 #endif // JUGADOR_H
