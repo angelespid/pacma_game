@@ -5,9 +5,13 @@
 #include "punto.h"
 #include <QPainter>
 #include <QGraphicsTextItem>
+#include <QMessageBox> // Incluir para el cuadro de diálogo
+#include "mensajes.h"
+#include <QVBoxLayout>
+#include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), scene(new QGraphicsScene(this)), laberinto(nullptr), puntaje(0) {
+    : QMainWindow(parent), scene(new QGraphicsScene(this)), laberinto(nullptr), puntaje(0),vidas(3) {
 
     // Configuración de la escena y la vista
     view = new QGraphicsView(scene, this);
@@ -18,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Mapa local
     QVector<QVector<int>> mapa = {
                                   {1, 1, 1, 1, 1, 1, 1, 1},
-                                  {1, 0, 1, 0, 0, 0, 0, 1},
+                                  {1, 0, 0, 0, 0, 0, 0, 1},
                                   {1, 0, 1, 1, 1, 1, 0, 1},
                                   {1, 0, 0, 0, 0, 1, 0, 1},
                                   {1, 0, 1, 0, 0, 1, 0, 1},
@@ -82,15 +86,20 @@ MainWindow::MainWindow(QWidget *parent)
         jugador->reiniciarPosicion();
     });
 
+    for (Enemigo *enemigo : enemigos) {
+        connect(enemigo, &Enemigo::colisionDetectada, this, &MainWindow::manejarColisionConEnemigo);
+    }
+
     connect(jugador, &Jugador::puntoRecolectado, [this]() {
         puntaje++;
         textoPuntaje->setPlainText(QString("Puntaje: %1").arg(puntaje));
         qDebug() << "Puntaje actualizado:" << puntaje;
     });
-    connect(jugador, &Jugador::vidasActualizadas, [this](int vidas) {
-        textoVidas->setPlainText(QString("Vidas: %1").arg(vidas));
-        qDebug() << "Vidas actualizadas:" << vidas;
+    connect(jugador, &Jugador::vidasActualizadas, [this](int nuevasVidas) {
+        textoVidas->setPlainText(QString("Vidas: %1").arg(nuevasVidas));
+        qDebug() << "Vidas actualizadas desde señal:" << nuevasVidas;
     });
+
     connect(jugador, &Jugador::gameOver, [this]() {
         qDebug() << "¡Game Over!";
         textoVidas->setPlainText("Vidas: 0");
@@ -100,6 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
         gameOverText->setFont(QFont("Arial", 36));
         gameOverText->setPos(scene->width() / 2 - 100, scene->height() / 2 - 50);
         scene->addItem(gameOverText);
+        connect(jugador, &Jugador::gameOver, this, &MainWindow::mostrarGameOver);
 
         // Deshabilitar eventos de teclado
         view->setEnabled(false);
@@ -124,7 +134,164 @@ void MainWindow::colocarPuntos() {
         }
     }
 }
+//Menu para reiniciar el juego o fin del juego
 
+void MainWindow::mostrarGameOver() {
+    QDialog dialog(this);
+    dialog.setWindowTitle("Game Over");
+
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+    layout->addWidget(new QLabel("Has perdido todas tus vidas. ¿Qué deseas hacer?"));
+
+    QPushButton *reiniciarButton = new QPushButton("Reiniciar");
+    QPushButton *salirButton = new QPushButton("Salir");
+
+    layout->addWidget(reiniciarButton);
+    layout->addWidget(salirButton);
+
+    connect(reiniciarButton, &QPushButton::clicked, [&dialog, this]() {
+        dialog.accept();
+        reiniciarJuego();
+    });
+    connect(salirButton, &QPushButton::clicked, [&dialog, this]() {
+        dialog.reject();
+        close();
+    });
+
+    dialog.exec();
+    connect(jugador, &Jugador::puntoRecolectado, [this]() {
+        puntaje++;
+        textoPuntaje->setPlainText(QString("Puntaje: %1").arg(puntaje));
+        qDebug() << "Puntaje actualizado:" << puntaje;
+
+        verificarVictoria(); // Llamar para verificar si quedan puntos
+    });
+
+
+}
+
+void MainWindow::manejarColisionConEnemigo() {
+    qDebug() << "Colisión detectada. Vidas actuales:" << vidas;
+    vidas--;
+    qDebug() << "Vidas después de la colisión:" << vidas;
+
+    // Actualizar el texto de vidas en la interfaz
+    textoVidas->setPlainText(QString("Vidas: %1").arg(vidas));
+
+    if (vidas <= 0) {
+        qDebug() << "¡Game Over!";
+        mostrarGameOver();
+    } else {
+        jugador->reiniciarPosicion();
+    }
+}
+
+
+void MainWindow::reiniciarJuego() {
+    qDebug() << "Reiniciando juego...";
+
+    // Reiniciar puntaje
+    puntaje = 0;
+    textoPuntaje->setPlainText(QString("Puntaje: %1").arg(puntaje));
+
+    // Reiniciar vidas
+    vidas = 3;
+    textoVidas->setPlainText(QString("Vidas: %1").arg(vidas));
+
+    // Restablecer posición del jugador
+    QPointF jugadorPosInicial(80, 80); // Asume que esta es la posición inicial
+    jugador->setPos(jugadorPosInicial);
+
+    // Verificar y reubicar enemigos si están en la posición del jugador
+    for (Enemigo *enemigo : enemigos) {
+        QPointF nuevaPos;
+        do {
+            // Generar una nueva posición aleatoria dentro del rango válido del laberinto
+            int nuevoX = (rand() % 7 + 1) * 80; // Ajustar los límites
+            int nuevoY = (rand() % 7 + 1) * 80;
+            nuevaPos = QPointF(nuevoX, nuevoY);
+        } while (nuevaPos == jugadorPosInicial); // Repetir si coincide con el jugador
+
+        enemigo->setPos(nuevaPos);
+        qDebug() << "Enemigo reubicado en:" << nuevaPos;
+    }
+
+    // Eliminar todos los puntos y volver a colocarlos
+    QList<QGraphicsItem *> items = scene->items();
+    for (QGraphicsItem *item : items) {
+        Punto *punto = dynamic_cast<Punto *>(item);
+        if (punto) {
+            scene->removeItem(punto);
+            delete punto;
+        }
+    }
+    colocarPuntos();
+
+    // Habilitar nuevamente los controles
+    view->setEnabled(true);
+
+    qDebug() << "Juego reiniciado.";
+}
+void MainWindow::verificarVictoria() {
+    // Iterar sobre todos los elementos en la escena y verificar si quedan puntos
+    QList<QGraphicsItem *> items = scene->items();
+    bool hayPuntosRestantes = false;
+
+    for (QGraphicsItem *item : items) {
+        Punto *punto = dynamic_cast<Punto *>(item); // Verificar si el objeto es de tipo Punto
+        if (punto) {
+            hayPuntosRestantes = true; // Si encontramos al menos un punto, establecemos la bandera
+            break; // No necesitamos buscar más, basta con encontrar un punto
+        }
+    }
+
+    // Si no hay puntos restantes, se considera victoria
+    if (!hayPuntosRestantes) {
+        qDebug() << "¡Victoria! Todos los puntos recolectados.";
+        QMessageBox::information(this, "¡Victoria!", "¡Has recolectado todos los puntos y ganado el juego!");
+        reiniciarJuego(); // Reinicia el juego tras la victoria
+    }
+}
+
+/*
+void MainWindow::reiniciarJuego() {
+    qDebug() << "Reiniciando juego...";
+
+    // Reiniciar puntaje
+    puntaje = 0;
+    textoPuntaje->setPlainText(QString("Puntaje: %1").arg(puntaje));
+
+    // Reiniciar vidas
+    jugador->inicializarVidas(3);
+    textoVidas->setPlainText(QString("Vidas: %1").arg(3));
+
+    // Restablecer posición del jugador
+    jugador->reiniciarPosicion();
+
+    // Eliminar todos los puntos y volver a colocarlos
+    QList<QGraphicsItem *> items = scene->items();
+    for (QGraphicsItem *item : items) {
+        Punto *punto = dynamic_cast<Punto *>(item);
+
+
+        if (punto) {
+            scene->removeItem(punto);
+            delete punto;
+        }
+    }
+    colocarPuntos();
+
+    // Restablecer posición de los enemigos (si aplica)
+    for (Enemigo *enemigo : enemigos) {
+        enemigo->reiniciarPosicion(); // Asegúrate de implementar un método `reiniciarPosicion` en la clase `Enemigo`.
+    }
+
+    // Volver a habilitar la vista
+    view->setEnabled(true);
+
+    qDebug() << "Juego reiniciado.";
+}
+*/
 MainWindow::~MainWindow() {
     delete laberinto;
     delete scene;

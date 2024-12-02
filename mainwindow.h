@@ -8,6 +8,7 @@
 #include "enemigo.h"
 #include "punto.h"
 #include "jugador.h"
+#include<QLabel>
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -16,7 +17,9 @@ public:
     void colocarPuntos();
      QGraphicsTextItem *textoPuntaje;
     ~MainWindow();
-
+ private slots: // Usa slots aquí para integrarlo con Qt si necesitas que reaccione a señales
+     void manejarColisionConEnemigo();
+     void verificarVictoria();
 private:
     QGraphicsScene *scene;
     QGraphicsView *view;
@@ -24,6 +27,15 @@ private:
     int puntaje;
     QGraphicsTextItem *textoVidas; // Texto para mostrar las vidas restantes
     Jugador *jugador; // Variable miembro para el jugador
+    void mostrarGameOver();
+    void iniciarJuego();
+    void reiniciarJuego();
+    QVector<Enemigo *> enemigos;
+    int vidas;
+    int inicioX, inicioY;  // Coordenadas iniciales del jugador
+    QLabel *labelVidas;    // Etiqueta para mostrar las vidas
+    QLabel *labelPuntaje;  // Etiqueta para mostrar el puntaje
+
 };
 
 #endif // MAINWINDOW_H

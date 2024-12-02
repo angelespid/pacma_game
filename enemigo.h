@@ -13,12 +13,16 @@ public:
 
 
     void patrullar(); // Movimiento básico del enemigo
+    void reiniciarPosicion();
 
 private:
      QVector<QVector<int>> mapa;
     int cellSize;      // Tamaño de cada celda
     int dx, dy;        // Dirección del movimiento
     QTimer *timer;     // Timer para actualizar el movimiento
+    int posInicialX;
+    int posInicialY;
+
 
 signals:
     void colisionDetectada(); // Señal para manejar colisiones

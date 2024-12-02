@@ -11,7 +11,8 @@ Enemigo::Enemigo(const QVector<QVector<int>> &mapa, int x, int y, int cellSize, 
     setPolygon(triangle);
 
     setBrush(QBrush(Qt::red)); // Color rojo para el enemigo
-
+    posInicialX = x;
+    posInicialY = y;
     // Establecer la posición inicial
     setPos(x, y);
 
@@ -60,4 +61,9 @@ void Enemigo::patrullar() {
     }
 
     qDebug() << "Enemigo movido a posición:" << pos();
+}
+
+void Enemigo::reiniciarPosicion() {
+    // Cambiar a la posición inicial (por ejemplo, las coordenadas iniciales)
+    setPos(posInicialX, posInicialY); // Usa las coordenadas iniciales de cada enemigo
 }
